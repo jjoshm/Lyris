@@ -1,0 +1,66 @@
+name: lyris_tracker
+description: "100% offline period & cycle tracker with partner mode"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Database
+  drift: ^2.22.1
+  sqlite3_flutter_libs: ^0.5.28
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # WiFi Sync (mDNS discovery + local HTTP)
+  bonsoir: ^5.1.10
+
+  # QR Code sharing (pairing)
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.2
+
+  # UI
+  table_calendar: ^3.1.3
+  intl: ^0.20.2
+  cupertino_icons: ^1.0.8
+
+  # Utilities
+  uuid: ^4.5.1
+  shared_preferences: ^2.3.4
+  flutter_secure_storage: ^9.2.4
+  collection: ^1.19.1
+  equatable: ^2.0.7
+  crypto: ^3.0.6
+  flutter_foreground_task: ^9.2.2
+  cryptography: ^2.9.0
+  connectivity_plus: ^7.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  drift_dev: ^2.22.1
+  build_runner: ^2.4.14
+  riverpod_generator: ^2.6.3
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/logo_raw.png"
+  adaptive_icon_background: "#0D0D14"
+  adaptive_icon_foreground: "assets/logo_foreground.png"
+  adaptive_icon_monochrome: "assets/logo_foreground.png"
+
+flutter:
+  uses-material-design: true
