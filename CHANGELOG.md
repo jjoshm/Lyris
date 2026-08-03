@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/jjoshm/Lyris/compare/v1.1.0...v1.1.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* dont show prediction without data ([c711fc0](https://github.com/jjoshm/Lyris/commit/c711fc066de437ec115c841124a64f39ceea7373))
+
 ## [1.1.0](https://github.com/jjoshm/Lyris/compare/v1.0.0...v1.1.0) (2026-07-31)
 
 
