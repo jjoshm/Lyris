@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import '../services/prediction_engine.dart';
 import '../theme/lyris_theme.dart';
 
-/// Shows current cycle phase info with helpful context
+/// Shows current cycle phase info with helpful context.
+/// With no logged data (phase == null) it shows an onboarding hint instead.
 class PhaseCard extends StatelessWidget {
-  final CyclePhase phase;
+  final CyclePhase? phase;
   final int? cycleDay;
 
   PhaseCard({super.key, required this.phase, this.cycleDay});
 
   @override
   Widget build(BuildContext context) {
-    final color = LyrisTheme.phaseColor(phase.name);
-    final info = _phaseInfo(phase);
+    final color = phase != null
+        ? LyrisTheme.phaseColor(phase!.name)
+        : LyrisTheme.primary;
+    final info = phase != null ? _phaseInfo(phase!) : _noDataInfo;
 
     return Container(
       width: double.infinity,
@@ -32,14 +35,16 @@ class PhaseCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(phase.emoji, style: TextStyle(fontSize: 24)),
+              Text(phase?.emoji ?? '✨', style: TextStyle(fontSize: 24)),
               SizedBox(width: 8),
-              Text(
-                phase.label,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: color,
+              Expanded(
+                child: Text(
+                  phase != null ? phase!.label : 'Welcome to Lyris',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
                 ),
               ),
             ],
@@ -58,6 +63,10 @@ class PhaseCard extends StatelessWidget {
       ),
     );
   }
+
+  static const String _noDataInfo =
+      'Log your first period day in the calendar to start tracking your cycle. '
+      'Predictions and phase insights appear once there\'s data to base them on.';
 
   String _phaseInfo(CyclePhase phase) {
     switch (phase) {

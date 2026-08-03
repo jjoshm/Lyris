@@ -39,13 +39,16 @@ final cyclesProvider = Provider<List<CycleData>>((ref) {
   );
 });
 
-final predictionProvider = Provider<CyclePrediction>((ref) {
+/// Null when no period data has been logged yet — the UI must show
+/// nothing predicted in that state (no fake predictions on fresh login).
+final predictionProvider = Provider<CyclePrediction?>((ref) {
   final cycles = ref.watch(cyclesProvider);
   return PredictionEngine.predict(cycles);
 });
 
-final currentPhaseProvider = Provider<CyclePhase>((ref) {
+final currentPhaseProvider = Provider<CyclePhase?>((ref) {
   final prediction = ref.watch(predictionProvider);
+  if (prediction == null) return null;
   return PredictionEngine.currentPhase(prediction);
 });
 
@@ -121,17 +124,19 @@ final partnerExportProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final cycleDay = ref.watch(currentCycleDayProvider);
 
   final export = await db.exportAllData();
-  export['prediction'] = {
-    'nextPeriodStart': prediction.nextPeriodStart?.toIso8601String(),
-    'ovulationDay': prediction.ovulationDay?.toIso8601String(),
-    'fertileWindowStart': prediction.fertileWindowStart.toIso8601String(),
-    'fertileWindowEnd': prediction.fertileWindowEnd.toIso8601String(),
-    'pmsStart': prediction.pmsStart?.toIso8601String(),
-    'predictedCycleLength': prediction.predictedCycleLength,
-    'predictedPeriodLength': prediction.predictedPeriodLength,
-    'confidence': prediction.confidence,
-  };
-  export['currentPhase'] = phase.name;
+  export['prediction'] = prediction == null
+      ? null
+      : {
+          'nextPeriodStart': prediction.nextPeriodStart?.toIso8601String(),
+          'ovulationDay': prediction.ovulationDay?.toIso8601String(),
+          'fertileWindowStart': prediction.fertileWindowStart.toIso8601String(),
+          'fertileWindowEnd': prediction.fertileWindowEnd.toIso8601String(),
+          'pmsStart': prediction.pmsStart?.toIso8601String(),
+          'predictedCycleLength': prediction.predictedCycleLength,
+          'predictedPeriodLength': prediction.predictedPeriodLength,
+          'confidence': prediction.confidence,
+        };
+  export['currentPhase'] = phase?.name;
   export['currentCycleDay'] = cycleDay;
 
   return export;

@@ -4,16 +4,79 @@ import 'package:intl/intl.dart';
 import '../models/cycle_models.dart';
 import '../theme/lyris_theme.dart';
 
-/// Shows upcoming predictions: next period, ovulation, fertile window
+/// Shows upcoming predictions: next period, ovulation, fertile window.
+/// With no logged data (prediction == null) it shows a "not enough data"
+/// state instead of fabricated dates.
 class PredictionCard extends StatelessWidget {
-  final CyclePrediction prediction;
+  final CyclePrediction? prediction;
 
   PredictionCard({super.key, required this.prediction});
 
   @override
   Widget build(BuildContext context) {
+    final p = prediction;
+
+    if (p == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Predictions',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: LyrisTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.hourglass_empty_rounded,
+                      size: 20, color: LyrisTheme.primary),
+                ),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Not enough data yet. Log your periods and predictions '
+                    'will appear here automatically.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     final dateFormat = DateFormat('MMM d');
-    final confidencePercent = (prediction.confidence * 100).round();
+    final confidencePercent = (p.confidence * 100).round();
 
     return Container(
       width: double.infinity,
@@ -46,7 +109,7 @@ class PredictionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _confidenceColor(prediction.confidence, context).withOpacity(0.12),
+                  color: _confidenceColor(p.confidence, context).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -54,7 +117,7 @@ class PredictionCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: _confidenceColor(prediction.confidence, context),
+                    color: _confidenceColor(p.confidence, context),
                   ),
                 ),
               ),
@@ -65,38 +128,38 @@ class PredictionCard extends StatelessWidget {
             icon: Icons.water_drop_rounded,
             color: LyrisTheme.periodColor,
             label: 'Next Period',
-            value: prediction.nextPeriodStart != null
-                ? dateFormat.format(prediction.nextPeriodStart!)
+            value: p.nextPeriodStart != null
+                ? dateFormat.format(p.nextPeriodStart!)
                 : '—',
-            sublabel: _daysUntil(prediction.nextPeriodStart),
+            sublabel: _daysUntil(p.nextPeriodStart),
           ),
           SizedBox(height: 12),
           _PredictionRow(
             icon: Icons.science_rounded,
             color: LyrisTheme.ovulationColor,
             label: 'Ovulation',
-            value: prediction.ovulationDay != null
-                ? dateFormat.format(prediction.ovulationDay!)
+            value: p.ovulationDay != null
+                ? dateFormat.format(p.ovulationDay!)
                 : '—',
-            sublabel: _daysUntil(prediction.ovulationDay),
+            sublabel: _daysUntil(p.ovulationDay),
           ),
           SizedBox(height: 12),
           _PredictionRow(
             icon: Icons.spa_rounded,
             color: LyrisTheme.fertileColor,
             label: 'Fertile Window',
-            value: '${dateFormat.format(prediction.fertileWindowStart)} – ${dateFormat.format(prediction.fertileWindowEnd)}',
-            sublabel: _daysUntil(prediction.fertileWindowStart),
+            value: '${dateFormat.format(p.fertileWindowStart)} – ${dateFormat.format(p.fertileWindowEnd)}',
+            sublabel: _daysUntil(p.fertileWindowStart),
           ),
           SizedBox(height: 12),
           _PredictionRow(
             icon: Icons.waves_rounded,
             color: LyrisTheme.pmsColor,
             label: 'PMS likely from',
-            value: prediction.pmsStart != null
-                ? dateFormat.format(prediction.pmsStart!)
+            value: p.pmsStart != null
+                ? dateFormat.format(p.pmsStart!)
                 : '—',
-            sublabel: _daysUntil(prediction.pmsStart),
+            sublabel: _daysUntil(p.pmsStart),
           ),
         ],
       ),

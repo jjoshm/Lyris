@@ -96,9 +96,14 @@ class PredictionEngine {
 
   /// Predict next cycle events — Clue methodology:
   /// Uses last 12 completed cycles with recency weighting.
-  static CyclePrediction predict(List<CycleData> cycles) {
+  ///
+  /// Returns null when there is no logged data at all — a fresh install
+  /// must not see fabricated predictions. Once at least one period day is
+  /// logged, a (default-based, low-confidence) prediction anchored to that
+  /// real start date is returned.
+  static CyclePrediction? predict(List<CycleData> cycles) {
     if (cycles.isEmpty) {
-      return _defaultPrediction(DateTime.now());
+      return null;
     }
 
     final lastCycle = cycles.last;

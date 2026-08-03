@@ -216,18 +216,15 @@ void main() {
   });
 
   group('PredictionEngine.predict', () {
-    test('empty cycles returns default prediction', () {
+    test('empty cycles returns null — no fabricated predictions on fresh login', () {
       final prediction = PredictionEngine.predict([]);
 
-      expect(prediction.predictedCycleLength, 28);
-      expect(prediction.predictedPeriodLength, 5);
-      expect(prediction.confidence, 0.2);
-      expect(prediction.nextPeriodStart, isNotNull);
+      expect(prediction, isNull);
     });
 
     test('single cycle (no completed) returns default from last start', () {
       final cycles = [_cycle(DateTime(2025, 6, 1), cycleLength: null)];
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.predictedCycleLength, 28);
       expect(prediction.nextPeriodStart, DateTime(2025, 6, 29));
@@ -240,7 +237,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 7 ? 28 : null));
         start = start.add(const Duration(days: 28));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.predictedCycleLength, 28);
       expect(prediction.predictedPeriodLength, 5);
@@ -255,7 +252,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 5 ? 28 : null));
         start = start.add(const Duration(days: 28));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.ovulationDay, isNotNull);
       expect(
@@ -272,7 +269,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 5 ? 30 : null));
         start = start.add(const Duration(days: 30));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(
         prediction.ovulationDay!.difference(prediction.fertileWindowStart).inDays,
@@ -291,7 +288,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 3 ? 28 : null));
         start = start.add(const Duration(days: 28));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.pmsStart, isNotNull);
       expect(
@@ -316,7 +313,7 @@ void main() {
         start = start.add(const Duration(days: 28));
       }
 
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       // Should predict ~28-29, not influenced by the old 40-day cycles
       // (recency weighting of 3×40 + 9×28 in window rounds to 29)
@@ -338,7 +335,7 @@ void main() {
         start = start.add(const Duration(days: 26));
       }
 
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       // With recency weighting, prediction should be ≤ 28 (biased toward recent 26s)
       // Linear weight approximation + rounding means it lands on 28, not above
@@ -354,7 +351,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 3 ? 50 : null));
         start = start.add(const Duration(days: 50));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.predictedCycleLength, lessThanOrEqualTo(45));
     });
@@ -366,7 +363,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 3 ? 28 : null, periodLength: 15));
         start = start.add(const Duration(days: 28));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.predictedPeriodLength, lessThanOrEqualTo(10));
     });
@@ -379,7 +376,7 @@ void main() {
         fewCycles.add(_cycle(start, cycleLength: i < 2 ? 28 : null));
         start = start.add(const Duration(days: 28));
       }
-      final lowDataPrediction = PredictionEngine.predict(fewCycles);
+      final lowDataPrediction = PredictionEngine.predict(fewCycles)!;
 
       // 12 cycles
       final manyCycles = <CycleData>[];
@@ -388,7 +385,7 @@ void main() {
         manyCycles.add(_cycle(start, cycleLength: i < 12 ? 28 : null));
         start = start.add(const Duration(days: 28));
       }
-      final highDataPrediction = PredictionEngine.predict(manyCycles);
+      final highDataPrediction = PredictionEngine.predict(manyCycles)!;
 
       expect(highDataPrediction.confidence, greaterThan(lowDataPrediction.confidence));
     });
@@ -412,8 +409,8 @@ void main() {
         start = start.add(Duration(days: len ?? 28));
       }
 
-      final consistentPrediction = PredictionEngine.predict(consistent);
-      final irregularPrediction = PredictionEngine.predict(irregular);
+      final consistentPrediction = PredictionEngine.predict(consistent)!;
+      final irregularPrediction = PredictionEngine.predict(irregular)!;
 
       expect(consistentPrediction.confidence, greaterThan(irregularPrediction.confidence));
     });
@@ -425,7 +422,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: i < 19 ? 28 : null));
         start = start.add(const Duration(days: 28));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.confidence, greaterThanOrEqualTo(0.1));
       expect(prediction.confidence, lessThanOrEqualTo(0.95));
@@ -441,7 +438,7 @@ void main() {
         cycles.add(_cycle(start, cycleLength: len));
         start = start.add(Duration(days: len ?? 28));
       }
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       // Prediction should be within the observed range
       expect(prediction.predictedCycleLength, greaterThanOrEqualTo(26));
@@ -628,7 +625,7 @@ void main() {
       final entries = _generatePeriods(cycleStarts: starts, periodLength: 5);
 
       final cycles = PredictionEngine.extractCycles(entries);
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
       final averages = PredictionEngine.computeAverages(cycles);
 
       expect(cycles.length, 7);
@@ -659,7 +656,7 @@ void main() {
 
       final entries = _generatePeriods(cycleStarts: starts, periodLength: 5);
       final cycles = PredictionEngine.extractCycles(entries);
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       // Should be within observed range (clamped 21-45)
       expect(prediction.predictedCycleLength, greaterThanOrEqualTo(21));
@@ -672,7 +669,7 @@ void main() {
         cycleStarts: [DateTime(2025, 5, 1), DateTime(2025, 5, 29), DateTime(2025, 6, 26)],
       );
       final cycles = PredictionEngine.extractCycles(entries);
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       expect(prediction.predictedCycleLength, 28);
       expect(prediction.confidence, lessThan(0.7));
@@ -692,7 +689,7 @@ void main() {
         start = start.add(const Duration(days: 28));
       }
 
-      final prediction = PredictionEngine.predict(cycles);
+      final prediction = PredictionEngine.predict(cycles)!;
 
       // Last 12 cycles: 3×35 + 9×28 → recency-weighted toward 28
       // But with only 3 old ones in the window, should be close to 28

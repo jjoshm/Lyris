@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import '../services/prediction_engine.dart';
 import '../theme/lyris_theme.dart';
 
-/// Clue-style circular cycle ring showing current day and phase
+/// Clue-style circular cycle ring showing current day and phase.
+/// With no logged data (cycleDay == null) it shows a clean, empty ring.
 class CycleRing extends StatelessWidget {
   final int? cycleDay;
   final int cycleLength;
-  final CyclePhase phase;
+  final CyclePhase? phase;
 
   CycleRing({
     super.key,
@@ -19,7 +20,9 @@ class CycleRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phaseColor = LyrisTheme.phaseColor(phase.name);
+    final phaseColor = phase != null
+        ? LyrisTheme.phaseColor(phase!.name)
+        : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return Center(
       child: SizedBox(
@@ -53,21 +56,22 @@ class CycleRing extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: phaseColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${phase.emoji} ${phase.label}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: phaseColor,
+                if (phase != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: phaseColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${phase!.emoji} ${phase!.label}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: phaseColor,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -142,7 +146,8 @@ class _CycleRingPainter extends CustomPainter {
       canvas.drawCircle(Offset(dotX, dotY), 4, innerDot);
     }
 
-    // Phase markers (small dots at key positions)
+    // Phase markers (small dots at key positions) — only once data exists
+    if (cycleDay == null) return;
     _drawPhaseMarker(canvas, center, radius, 0, LyrisTheme.periodColor); // Day 1
     _drawPhaseMarker(canvas, center, radius, 5 / cycleLength, LyrisTheme.follicularColor);
     _drawPhaseMarker(canvas, center, radius, (cycleLength - 19) / cycleLength, LyrisTheme.fertileColor);

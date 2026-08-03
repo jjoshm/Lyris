@@ -65,7 +65,7 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: CycleRing(
                   cycleDay: cycleDay,
-                  cycleLength: prediction.predictedCycleLength,
+                  cycleLength: prediction?.predictedCycleLength ?? 28,
                   phase: phase,
                 ),
               ),

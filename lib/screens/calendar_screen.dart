@@ -563,7 +563,7 @@ class _MonthBlock extends StatelessWidget {
   final DateTime? pulseDay;
   final Map<DateTime, List<PeriodEntry>> periodMap;
   final Map<DateTime, List<SymptomEntry>> symptomMap;
-  final CyclePrediction prediction;
+  final CyclePrediction? prediction;
   final Map<DateTime, String> historicalPhases;
   final void Function(DateTime) onDaySelected;
 
@@ -599,33 +599,43 @@ class _MonthBlock extends StatelessWidget {
       final nextDay = d == daysInMonth ? nextMonthFirstDay : DateTime(month.year, month.month, d + 1);
 
       // Phase per day — priority: period > predicted > ovulation > fertile > pms
+      // With no logged data (prediction == null) nothing is marked.
       final dateOnly = DateTime(day.year, day.month, day.day);
-      final predictionWindowStart =
-          prediction.fertileWindowStart.subtract(Duration(days: 7));
-      final predictionWindowEnd = prediction.nextPeriodStart != null
-          ? prediction.nextPeriodStart!
-              .add(Duration(days: prediction.predictedPeriodLength))
-          : prediction.fertileWindowEnd.add(Duration(days: 14));
-      final inPredictionWindow = !dateOnly.isBefore(predictionWindowStart) &&
-          !dateOnly.isAfter(predictionWindowEnd);
+      final p = prediction;
 
-      final isPredictedPeriod = inPredictionWindow &&
-          prediction.nextPeriodStart != null &&
-          !dateOnly.isBefore(prediction.nextPeriodStart!) &&
-          dateOnly.isBefore(prediction.nextPeriodStart!
-              .add(Duration(days: prediction.predictedPeriodLength)));
-      final isFertile = inPredictionWindow &&
-          !dateOnly.isBefore(prediction.fertileWindowStart) &&
-          !dateOnly.isAfter(prediction.fertileWindowEnd);
-      final isOvulation = inPredictionWindow &&
-          prediction.ovulationDay != null &&
-          dateOnly == DateTime(prediction.ovulationDay!.year,
-              prediction.ovulationDay!.month, prediction.ovulationDay!.day);
-      final isPms = inPredictionWindow &&
-          prediction.pmsStart != null &&
-          prediction.nextPeriodStart != null &&
-          !dateOnly.isBefore(prediction.pmsStart!) &&
-          dateOnly.isBefore(prediction.nextPeriodStart!);
+      bool inPredictionWindow = false;
+      bool isPredictedPeriod = false;
+      bool isFertile = false;
+      bool isOvulation = false;
+      bool isPms = false;
+      if (p != null) {
+        final predictionWindowStart =
+            p.fertileWindowStart.subtract(Duration(days: 7));
+        final predictionWindowEnd = p.nextPeriodStart != null
+            ? p.nextPeriodStart!
+                .add(Duration(days: p.predictedPeriodLength))
+            : p.fertileWindowEnd.add(Duration(days: 14));
+        inPredictionWindow = !dateOnly.isBefore(predictionWindowStart) &&
+            !dateOnly.isAfter(predictionWindowEnd);
+
+        isPredictedPeriod = inPredictionWindow &&
+            p.nextPeriodStart != null &&
+            !dateOnly.isBefore(p.nextPeriodStart!) &&
+            dateOnly.isBefore(p.nextPeriodStart!
+                .add(Duration(days: p.predictedPeriodLength)));
+        isFertile = inPredictionWindow &&
+            !dateOnly.isBefore(p.fertileWindowStart) &&
+            !dateOnly.isAfter(p.fertileWindowEnd);
+        isOvulation = inPredictionWindow &&
+            p.ovulationDay != null &&
+            dateOnly == DateTime(p.ovulationDay!.year,
+                p.ovulationDay!.month, p.ovulationDay!.day);
+        isPms = inPredictionWindow &&
+            p.pmsStart != null &&
+            p.nextPeriodStart != null &&
+            !dateOnly.isBefore(p.pmsStart!) &&
+            dateOnly.isBefore(p.nextPeriodStart!);
+      }
 
       String? phase;
       if (periodMap.containsKey(day)) {
@@ -642,41 +652,45 @@ class _MonthBlock extends StatelessWidget {
 
       String? phaseOf(DateTime d) {
         if (periodMap.containsKey(d)) return 'period';
+        final p = prediction;
+        // No prediction yet → nothing to mark (historical phases also need
+        // logged periods, so they're empty in this state too).
+        if (p == null) return null;
         final k = DateTime(d.year, d.month, d.day);
         final predictionWindowStartN =
-            prediction.fertileWindowStart.subtract(Duration(days: 7));
-        final predictionWindowEndN = prediction.nextPeriodStart != null
-            ? prediction.nextPeriodStart!
-                .add(Duration(days: prediction.predictedPeriodLength))
-            : prediction.fertileWindowEnd.add(Duration(days: 14));
+            p.fertileWindowStart.subtract(Duration(days: 7));
+        final predictionWindowEndN = p.nextPeriodStart != null
+            ? p.nextPeriodStart!
+                .add(Duration(days: p.predictedPeriodLength))
+            : p.fertileWindowEnd.add(Duration(days: 14));
         final inWindow = !k.isBefore(predictionWindowStartN) &&
             !k.isAfter(predictionWindowEndN);
         if (inWindow &&
-            prediction.nextPeriodStart != null &&
-            !k.isBefore(prediction.nextPeriodStart!) &&
-            k.isBefore(prediction.nextPeriodStart!
-                .add(Duration(days: prediction.predictedPeriodLength)))) {
+            p.nextPeriodStart != null &&
+            !k.isBefore(p.nextPeriodStart!) &&
+            k.isBefore(p.nextPeriodStart!
+                .add(Duration(days: p.predictedPeriodLength)))) {
           return 'predicted';
         }
         if (historicalPhases[k] == 'ovulation') return 'ovulation';
         if (inWindow &&
-            prediction.ovulationDay != null &&
-            k == DateTime(prediction.ovulationDay!.year,
-                prediction.ovulationDay!.month, prediction.ovulationDay!.day)) {
+            p.ovulationDay != null &&
+            k == DateTime(p.ovulationDay!.year,
+                p.ovulationDay!.month, p.ovulationDay!.day)) {
           return 'ovulation';
         }
         if (historicalPhases[k] == 'fertile') return 'fertile';
         if (inWindow &&
-            !k.isBefore(prediction.fertileWindowStart) &&
-            !k.isAfter(prediction.fertileWindowEnd)) {
+            !k.isBefore(p.fertileWindowStart) &&
+            !k.isAfter(p.fertileWindowEnd)) {
           return 'fertile';
         }
         if (historicalPhases[k] == 'pms') return 'pms';
         if (inWindow &&
-            prediction.pmsStart != null &&
-            prediction.nextPeriodStart != null &&
-            !k.isBefore(prediction.pmsStart!) &&
-            k.isBefore(prediction.nextPeriodStart!)) {
+            p.pmsStart != null &&
+            p.nextPeriodStart != null &&
+            !k.isBefore(p.pmsStart!) &&
+            k.isBefore(p.nextPeriodStart!)) {
           return 'pms';
         }
         return null;
